@@ -40,9 +40,9 @@ Install dependencies
 
 Create a `.env` file containing your Spotify API credentials. Use `.env.example` as a template.
 ```
-SPOTIPY_CLIENT_ID           = <<your spotify client id here>>
-SPOTIPY_CLIENT_SECRET       = <<your spotify client secret here>>
-SPOTIPY_REDIRECT_URI        = <<your spotify redirect uri here>>
+  SPOTIPY_CLIENT_ID           = <<your spotify client id here>>
+  SPOTIPY_CLIENT_SECRET       = <<your spotify client secret here>>
+  SPOTIPY_REDIRECT_URI        = <<your spotify redirect uri here>>
 ```
 
 ## Arguments
