@@ -9,6 +9,7 @@ from scraper import get_recommendations, save_track
 
 Path('logs').mkdir(parents=True, exist_ok=True)
 LOGGING_DIR = f'logs/spotify_scrape-{dt.datetime.today().strftime("%Y%m%d")}.log'
+MAX_FAILED_SCRAPES = 1000
 
 logging.basicConfig(
     level=logging.INFO,
@@ -34,8 +35,10 @@ def main():
                         help="The number of tracks the recommender will scrape")
     args = parser.parse_args()
     client = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials())
-    while args.limit > 0:
+    consecutive_failed_scrapes = 0
+    while args.limit > 0 and consecutive_failed_scrapes < MAX_FAILED_SCRAPES:
         curr_limit = 100 if args.limit > 100 else args.limit
+        curr_scraped = 0
         recommended_tracks = get_recommendations(client=client, genres=args.genre, artists=args.artist, limit=curr_limit)
         for track in recommended_tracks["tracks"]:
             current_payload = {
@@ -43,8 +46,13 @@ def main():
                 "title": track["name"],
                 "artist": track["artists"][0]["name"],
             }
-            save_track(client, current_payload)
-        args.limit-=100
+            scrape_success = save_track(client, current_payload)
+            if scrape_success:
+                curr_scraped+=1
+                consecutive_failed_scrapes = 0
+            else:
+                consecutive_failed_scrapes+=1
+        args.limit-=curr_scraped
 
 if __name__ == '__main__':
     main()  

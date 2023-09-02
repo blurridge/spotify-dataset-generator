@@ -35,7 +35,7 @@ def save_track(client, track_payload):
     """
     if check_if_track_exists(track_payload["spotify_song_id"]):
         logging.error(f"{track_payload['artist']} - {track_payload['title']} already exists in the dataset. Skipping...")
-        return 
+        return False
     logging.info(f"Scraping features for {track_payload['artist']} - {track_payload['title']}...")
     current_track_features = get_track_features(client, track_payload["spotify_song_id"])[0]
     current_track_features.pop("id")
@@ -50,6 +50,7 @@ def save_track(client, track_payload):
         logging.info(f"Adding {track_payload['artist']} - {track_payload['title']} to the dataset...")
         csv_writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         csv_writer.writerow(track_payload)
+    return True
 
 def get_track_features(client, spotify_song_id):
     """
