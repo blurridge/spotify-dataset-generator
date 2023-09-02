@@ -7,31 +7,22 @@ from pathlib import Path
 from dotenv import load_dotenv
 from scraper import get_recommendations, save_track
 
-# Flow:
-# 1. User enters args. 
-# 2. Recommender will receive genre seed and artists. Will loop until limit
-#     2a. If recommender returns tracks
-#         2a1. Loop over each track
-#         2a2. If track does not exist in csv, scrape and write to csv.
-#         2a3. Else, skip.
-#     2b. Return error 
-# 3. END
+Path('logs').mkdir(parents=True, exist_ok=True)
+LOGGING_DIR = f'logs/spotify_scrape-{dt.datetime.today().strftime("%Y%m%d")}.log'
 
-# LOGGING_DIR = f'logs/spotify_scrape-{dt.datetime.today().strftime("%Y%m%d")}.log'
-
-# logging.basicConfig(
-#     level=logging.INFO,
-#     format='%(asctime)s %(levelname)-8s %(message)s',
-#     handlers=[
-#         logging.StreamHandler(),
-#         logging.FileHandler(Path(LOGGING_DIR)),
-#     ]
-# )
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)-8s %(message)s',
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler(Path(LOGGING_DIR)),
+    ]
+)
 
 def main():
     load_dotenv()
     parser = argparse.ArgumentParser(prog="Spotify Genre Track Scraper", 
-                                     description="Gathers spotify tracks' features from Spotify API using seeds",
+                                     description="Gathers Spotify tracks' features from Spotify API using seeds",
                                      epilog="Script made by @blurridge || Zach Riane I. Machacon"
                                      )
     parser.add_argument("-g", "--genre", required=True, type=lambda s: s.split(","),
@@ -43,14 +34,17 @@ def main():
                         help="The number of tracks the recommender will scrape")
     args = parser.parse_args()
     client = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials())
-    recommended_tracks = get_recommendations(client=client, genres=args.genre, artists=args.artist, limit=args.limit)
-    for track in recommended_tracks["tracks"]:
-        current_payload = {
-            "spotify_song_id": track["id"],
-            "title": track["name"],
-            "artist": track["artists"][0]["name"],
-        }
-        save_track(client, current_payload)
+    while args.limit > 0:
+        curr_limit = 100 if args.limit > 100 else args.limit
+        recommended_tracks = get_recommendations(client=client, genres=args.genre, artists=args.artist, limit=curr_limit)
+        for track in recommended_tracks["tracks"]:
+            current_payload = {
+                "spotify_song_id": track["id"],
+                "title": track["name"],
+                "artist": track["artists"][0]["name"],
+            }
+            save_track(client, current_payload)
+        args.limit-=100
 
 if __name__ == '__main__':
     main()  
