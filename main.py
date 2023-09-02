@@ -5,7 +5,7 @@ import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 from pathlib import Path
 from dotenv import load_dotenv
-from scraper import get_recommendations
+from scraper import get_recommendations, save_track
 
 # Flow:
 # 1. User enters args. 
@@ -43,7 +43,14 @@ def main():
                         help="The number of tracks the recommender will scrape")
     args = parser.parse_args()
     client = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials())
-    recommended_songs = get_recommendations(client=client, genres=args.genre, artists=args.artist, limit=args.limit)
+    recommended_tracks = get_recommendations(client=client, genres=args.genre, artists=args.artist, limit=args.limit)
+    for track in recommended_tracks["tracks"]:
+        current_payload = {
+            "spotify_song_id": track["id"],
+            "title": track["name"],
+            "artist": track["artists"][0]["name"],
+        }
+        save_track(client, current_payload)
 
 if __name__ == '__main__':
     main()  
