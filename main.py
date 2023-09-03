@@ -12,7 +12,7 @@ from utils import setup_session, format_retry_after
 
 Path('logs').mkdir(parents=True, exist_ok=True)
 LOGGING_DIR = f'logs/spotify_scrape-{dt.datetime.today().strftime("%Y%m%d")}.log'
-MAX_FAILED_SCRAPES = 2000
+MAX_FAILED_SCRAPES = 500
 
 logging.basicConfig(
     level=logging.INFO,
