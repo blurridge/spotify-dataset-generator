@@ -10,10 +10,16 @@ from scraper import get_recommendations, save_track
 from spotipy import SpotifyException
 from utils import setup_session, format_retry_after
 
-Path('logs').mkdir(parents=True, exist_ok=True)
-LOGGING_DIR = f'logs/spotify_scrape-{dt.datetime.today().strftime("%Y%m%d")}.log'
+# Scraping Settings
 MAX_FAILED_SCRAPES = 500
 
+# Create logs directory if it doesn't exist
+Path('logs').mkdir(parents=True, exist_ok=True)
+
+# Define logging directory
+LOGGING_DIR = f'logs/spotify_scrape-{dt.datetime.today().strftime("%Y%m%d")}.log'
+
+# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s %(levelname)-8s %(message)s',
@@ -26,6 +32,8 @@ logging.basicConfig(
 def main():
     load_dotenv()
     session, retry, adapter = setup_session()
+
+    # Define command-line arguments and help messages
     parser = argparse.ArgumentParser(prog="Spotify Genre Track Scraper", 
                                      description="Gathers Spotify tracks' features from Spotify API using seeds",
                                      epilog="Script made by @blurridge || Zach Riane I. Machacon"
@@ -38,11 +46,17 @@ def main():
     parser.add_argument("-l", "--limit", type=int, required=True, 
                         help="The number of tracks the recommender will scrape")
     args = parser.parse_args()
+
+    # Create a Spotify client
     client = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials(), requests_session=session)
     consecutive_failed_scrapes = 0
+
+    # Loop will run until request limit is reached or if consecutive failed scrapes passes MAX_FAILED_SCRAPES
     while args.limit > 0 and consecutive_failed_scrapes < MAX_FAILED_SCRAPES:
         curr_limit = 100 if args.limit > 100 else args.limit
         curr_scraped = 0
+
+        # Get recommended tracks
         recommended_tracks = get_recommendations(client=client, genres=args.genre, artists=args.artist, limit=curr_limit)
         for track in recommended_tracks["tracks"]:
             current_payload = {
@@ -53,9 +67,11 @@ def main():
                 "popularity_score": track["popularity"]
             }
             try:
+                # Save track and check for success
                 scrape_success = save_track(client=client, genres=args.genre, track_payload=current_payload)
             except SpotifyException as e:
                 if e.http_status == 429:
+                    # Status 429 means rate limit. This logs the value of the retry-after header.
                     formatted_retry_after = format_retry_after(int(e.headers['retry-after']))
                     logging.error(f"Rate limited for {formatted_retry_after}. Exiting script...")
                 exit()
