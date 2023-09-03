@@ -9,14 +9,14 @@ from scraper import get_recommendations, save_track
 
 Path('logs').mkdir(parents=True, exist_ok=True)
 LOGGING_DIR = f'logs/spotify_scrape-{dt.datetime.today().strftime("%Y%m%d")}.log'
-MAX_FAILED_SCRAPES = 1000
+MAX_FAILED_SCRAPES = 10000
 
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s %(levelname)-8s %(message)s',
     handlers=[
         logging.StreamHandler(),
-        logging.FileHandler(Path(LOGGING_DIR)),
+        logging.FileHandler(Path(LOGGING_DIR), encoding='utf-8'),
     ]
 )
 
@@ -43,10 +43,12 @@ def main():
         for track in recommended_tracks["tracks"]:
             current_payload = {
                 "spotify_song_id": track["id"],
+                "spotify_artist_id": track["artists"][0]["id"],
                 "title": track["name"],
                 "artist": track["artists"][0]["name"],
+                "popularity_score": track["popularity"]
             }
-            scrape_success = save_track(client, current_payload)
+            scrape_success = save_track(client=client, genres=args.genre, track_payload=current_payload)
             if scrape_success:
                 curr_scraped+=1
                 consecutive_failed_scrapes = 0
