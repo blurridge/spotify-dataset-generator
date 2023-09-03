@@ -2,6 +2,7 @@ import csv
 import datetime as dt
 import logging
 from pathlib import Path
+from spotipy.client import Spotify
 
 SPOTIFY_DATASET_FILEPATH = "spotify_dataset.csv"
 Path('./logs').mkdir(parents=True, exist_ok=True)
@@ -22,14 +23,14 @@ def csv_file_exists():
     """
     return Path(SPOTIFY_DATASET_FILEPATH).is_file()
 
-def get_recommendations(client, genres, artists, limit):
+def get_recommendations(client: Spotify, genres, artists, limit):
     """
     Scrapes from Spotify API via Spotipy recommended songs based on seed artists, genres, and a set limit.
     """
     recommended_songs = client.recommendations(seed_artists=artists, seed_genres=genres, limit=limit)
     return recommended_songs
 
-def save_track(client, genres, track_payload):
+def save_track(client: Spotify, genres, track_payload):
     """
     Saves track to the dataset if it passes checks.
     """
@@ -59,7 +60,7 @@ def save_track(client, genres, track_payload):
         csv_writer.writerow(track_payload)
     return True
 
-def get_track_features(client, spotify_song_id):
+def get_track_features(client:Spotify, spotify_song_id):
     """
     Scrapes track features from Spotify API via Spotipy. It describes the characteristics of the tracks.
     """
@@ -79,7 +80,7 @@ def check_if_track_exists(spotify_song_id):
                 return True
     return False
 
-def check_if_artist_matches_genre(client, genres, artist_id):
+def check_if_artist_matches_genre(client:Spotify, genres, artist_id):
     """
     Checks if recommended song's artist matches one of the seed genres.
     """

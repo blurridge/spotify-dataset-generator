@@ -7,6 +7,8 @@ from spotipy.oauth2 import SpotifyClientCredentials
 from pathlib import Path
 from dotenv import load_dotenv
 from scraper import get_recommendations, save_track
+from spotipy import SpotifyException
+from utils import setup_session, format_retry_after
 
 Path('logs').mkdir(parents=True, exist_ok=True)
 LOGGING_DIR = f'logs/spotify_scrape-{dt.datetime.today().strftime("%Y%m%d")}.log'
@@ -23,6 +25,7 @@ logging.basicConfig(
 
 def main():
     load_dotenv()
+    session, retry, adapter = setup_session()
     parser = argparse.ArgumentParser(prog="Spotify Genre Track Scraper", 
                                      description="Gathers Spotify tracks' features from Spotify API using seeds",
                                      epilog="Script made by @blurridge || Zach Riane I. Machacon"
@@ -35,7 +38,7 @@ def main():
     parser.add_argument("-l", "--limit", type=int, required=True, 
                         help="The number of tracks the recommender will scrape")
     args = parser.parse_args()
-    client = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials())
+    client = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials(), requests_session=session)
     consecutive_failed_scrapes = 0
     while args.limit > 0 and consecutive_failed_scrapes < MAX_FAILED_SCRAPES:
         curr_limit = 100 if args.limit > 100 else args.limit
@@ -49,14 +52,20 @@ def main():
                 "artist": track["artists"][0]["name"],
                 "popularity_score": track["popularity"]
             }
-            scrape_success = save_track(client=client, genres=args.genre, track_payload=current_payload)
+            try:
+                scrape_success = save_track(client=client, genres=args.genre, track_payload=current_payload)
+            except SpotifyException as e:
+                if e.http_status == 429:
+                    formatted_retry_after = format_retry_after(int(e.headers['retry-after']))
+                    logging.error(f"Rate limited for {formatted_retry_after}. Exiting script...")
+                exit()
             if scrape_success:
                 curr_scraped+=1
                 consecutive_failed_scrapes = 0
             else:
                 consecutive_failed_scrapes+=1
         args.limit-=curr_scraped
-        logging.info("Sleeping for 10 seconds to avoid rate limits...")
+        logging.info("Sleeping for 30 seconds to avoid rate limits...")
         time.sleep(10)
 
 if __name__ == '__main__':
