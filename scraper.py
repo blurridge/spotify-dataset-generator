@@ -43,6 +43,7 @@ def save_track(client, genres, track_payload):
     logging.info(f"Scraping features for {track_payload['artist']} - {track_payload['title']}...")
     current_track_features = get_track_features(client, track_payload["spotify_song_id"])[0]
     if current_track_features is None:
+        logging.error(f"{track_payload['artist']} - {track_payload['title']}'s features could not be scraped. Skipping...")
         return False
     current_track_features.pop("id")
     track_payload.update(current_track_features)
@@ -80,7 +81,7 @@ def check_if_track_exists(spotify_song_id):
 
 def check_if_artist_matches_genre(client, genres, artist_id):
     """
-    Checks if recommended song's artist matches one of the seed genres
+    Checks if recommended song's artist matches one of the seed genres.
     """
     current_artists_genres = client.artist(artist_id)['genres']
     seed_genre_set = set(genres)

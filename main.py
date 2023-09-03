@@ -2,6 +2,7 @@ import argparse
 import logging
 import datetime as dt
 import spotipy
+import time
 from spotipy.oauth2 import SpotifyClientCredentials
 from pathlib import Path
 from dotenv import load_dotenv
@@ -9,7 +10,7 @@ from scraper import get_recommendations, save_track
 
 Path('logs').mkdir(parents=True, exist_ok=True)
 LOGGING_DIR = f'logs/spotify_scrape-{dt.datetime.today().strftime("%Y%m%d")}.log'
-MAX_FAILED_SCRAPES = 10000
+MAX_FAILED_SCRAPES = 2000
 
 logging.basicConfig(
     level=logging.INFO,
@@ -55,6 +56,8 @@ def main():
             else:
                 consecutive_failed_scrapes+=1
         args.limit-=curr_scraped
+        logging.info("Sleeping for 10 seconds to avoid rate limits...")
+        time.sleep(10)
 
 if __name__ == '__main__':
     main()  
