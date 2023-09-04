@@ -11,7 +11,7 @@ from spotipy import SpotifyException
 from utils import setup_session, format_retry_after
 
 # Scraping Settings
-MAX_FAILED_SCRAPES = 500
+MAX_FAILED_SCRAPES = 100
 
 # Create logs directory if it doesn't exist
 Path('logs').mkdir(parents=True, exist_ok=True)
