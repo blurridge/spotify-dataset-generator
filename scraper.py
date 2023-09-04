@@ -5,7 +5,6 @@ from pathlib import Path
 from spotipy.client import Spotify
 
 # Dataset Settings
-
 SPOTIFY_DATASET_FILEPATH = "spotify_dataset.csv"
 
 # Create logs directory if it doesn't exist

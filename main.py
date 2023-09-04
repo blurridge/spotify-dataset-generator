@@ -75,6 +75,9 @@ def main():
                     formatted_retry_after = format_retry_after(int(e.headers['retry-after']))
                     logging.error(f"Rate limited for {formatted_retry_after}. Exiting script...")
                 exit()
+            except:
+                logging.error(f"Script lost connection. Exiting script...")
+                exit()
             if scrape_success:
                 curr_scraped+=1
                 consecutive_failed_scrapes = 0
@@ -82,7 +85,11 @@ def main():
                 consecutive_failed_scrapes+=1
         args.limit-=curr_scraped
         logging.info("Sleeping for 30 seconds to avoid rate limits...")
-        time.sleep(10)
+        time.sleep(30)
+    if args.limit == 0:
+        logging.info(f"Successfully scraped desired limit. Exiting script...")
+    else:
+        logging.info(f"Max failed scrapes exceeded. {args.limit} tracks left unscraped. Exiting script...")
 
 if __name__ == '__main__':
     main()  
