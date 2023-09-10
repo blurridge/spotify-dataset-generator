@@ -64,7 +64,7 @@ def main():
                 "spotify_artist_id": track["artists"][0]["id"],
                 "title": track["name"],
                 "artist": track["artists"][0]["name"],
-                "popularity_score": track["popularity"]
+                "track_popularity": track["popularity"]
             }
             try:
                 # Save track and check for success

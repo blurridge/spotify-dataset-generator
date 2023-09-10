@@ -45,10 +45,12 @@ def save_track(client: Spotify, genres: list, track_payload: dict):
     
     # Skips track if doesn't match target genre
     logging.info(f"Checking if {track_payload['artist']} - {track_payload['title']} matches target genres...")
-    if not check_if_artist_matches_genre(client=client, genres=genres, artist_id=track_payload['spotify_artist_id']): 
+    genre_match_result = check_if_artist_matches_genre(client=client, genres=genres, artist_id=track_payload['spotify_artist_id'])
+    if not genre_match_result[0]: 
         logging.error(f"{track_payload['artist']} - {track_payload['title']} does not match genre. Skipping...")
         return False
-    
+    elif genre_match_result[0]:
+        track_payload.update(genre_match_result[1])
     # Skips track if features are not scraped
     logging.info(f"Scraping features for {track_payload['artist']} - {track_payload['title']}...")
     current_track_features = get_track_features(client, track_payload["spotify_song_id"])[0]
@@ -94,12 +96,16 @@ def check_if_artist_matches_genre(client:Spotify, genres: list, artist_id: str):
     """
     Checks if recommended song's artist matches one of the seed genres.
     """
-    current_artists_genres = client.artist(artist_id)['genres']
+    current_artist = client.artist(artist_id)
+    current_artists_genres = current_artist['genres']
+    current_artists_popularity = {
+        'artist_popularity': current_artist['popularity']
+    }
     seed_genre_set = set(genres)
 
     # Uses nested loop since sometimes Spotify gives partial genres. This ensures matches with lists like [k-pop] and [k-pop girl group].
     for genre in seed_genre_set: 
         for artist_genre in current_artists_genres:
             if genre in artist_genre:
-                return True
-    return False
+                return [True, current_artists_popularity]
+    return [False, current_artists_popularity]
