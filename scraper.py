@@ -51,16 +51,16 @@ def save_track(client: Spotify, genres: list, track_payload: dict):
         return False
     elif genre_match_result[0]:
         track_payload.update(genre_match_result[1])
+    
     # Skips track if features are not scraped
     logging.info(f"Scraping features for {track_payload['artist']} - {track_payload['title']}...")
-    current_track_features = get_track_features(client, track_payload["spotify_song_id"])[0]
+    current_track_features = get_track_features(client, track_payload["spotify_song_id"])
     if current_track_features is None: 
         logging.error(f"{track_payload['artist']} - {track_payload['title']}'s features could not be scraped. Skipping...")
         return False
     
-    current_track_features.pop("id")
     track_payload.update(current_track_features)
-    fieldnames = list(track_payload.keys()) + list(current_track_features.keys())
+    fieldnames = list(track_payload.keys())
     if not csv_file_exists():
         logging.info(f"Dataset file not found. Creating new .csv file...")
         with open(SPOTIFY_DATASET_FILEPATH, 'w', newline='') as csvfile:
@@ -77,7 +77,9 @@ def get_track_features(client:Spotify, spotify_song_id: str):
     Scrapes track features from Spotify API via Spotipy. It describes the characteristics of the tracks.
     """
     current_track_features = client.audio_features(tracks=[spotify_song_id])
-    return current_track_features
+    keys_to_exclude = ['id', 'analysis_url', 'track_href', 'type', 'uri']
+    filtered_track_features = {key: value for key, value in current_track_features[0].items() if key not in keys_to_exclude}
+    return filtered_track_features
 
 def check_if_track_exists(spotify_song_id: str):
     """

@@ -64,6 +64,8 @@ def main():
                 "spotify_artist_id": track["artists"][0]["id"],
                 "title": track["name"],
                 "artist": track["artists"][0]["name"],
+                "release_date": track["album"]["release_date"],
+                "release_date_precision": track["album"]["release_date_precision"],
                 "track_popularity": track["popularity"]
             }
             try:
