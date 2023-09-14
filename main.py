@@ -76,6 +76,11 @@ def main():
                     # Status 429 means rate limit. This logs the value of the retry-after header.
                     formatted_retry_after = format_retry_after(int(e.headers['retry-after']))
                     logging.error(f"Rate limited for {formatted_retry_after}. Exiting script...")
+                elif e.http_status == 500:
+                    # Retry the request after a delay
+                    logging.error("Spotify API returned a 500 error. Exiting script...")
+                else:
+                    logging.error(f"Unknown Spotify API error occurred. Exiting script...")
                 exit()
             except:
                 logging.error(f"Script lost connection. Exiting script...")
